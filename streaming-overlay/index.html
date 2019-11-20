@@ -38,7 +38,7 @@
 	<script>
 		var api = 'https://try.donordrive.com/api/', // the url of the DonorDrive API you wish to poll
 			resource = 'participants', // the resource (events, participants, teams)
-			resourceID = 3522; // the ID of the specific resource to poll
+			resourceID = 19151; // the ID of the specific resource to poll
 
 		Vue.filter(
 			'formatMoney',
@@ -62,7 +62,7 @@
 				refreshDonations() {
 					var ld = new Date(this.entity.lastDonation);
 
-					axios.get(api + resource + '/' + resourceID + '/donations' + ( api.indexOf('?') >= 0 ? '&' : '?' ) + 'where=' + encodeURIComponent('createdDateUTC >= ' + ld.toISOString()) + '&orderBy=' + encodeURIComponent('createdDateUTC ASC'))
+					axios.get(api + resource + '/' + resourceID + '/donations' + ( api.indexOf('?') >= 0 ? '&' : '?' ) + 'where=' + encodeURIComponent('createdDateUTC > ' + ld.toISOString()) + '&orderBy=' + encodeURIComponent('createdDateUTC ASC'))
 						.then((response) => {
 							response.data.forEach((dx) => {
 								var createdDate = new Date(dx.createdDateUTC);
