@@ -11,9 +11,14 @@
 	<body>
 		<div id="app" class="container-fluid">
 			<div class="row">
-				<div class="col"><h1>Shift: {{ entity.sumShiftDonations | formatMoney }}</h1></div>
-				<div class="col"><h1>Total: {{ entity.sumDonations | formatMoney }}</h1></div>
+				<div class="col text-center">
+					<h1 class="h5">{{ entity.sumDonations | formatMoney }} / {{ entity.fundraisingGoal | formatMoney }}</h1>
+					<div class="progress">
+						<div class="progress-bar" role="progressbar" v-bind:style="{ width: ((entity.sumDonations / entity.fundraisingGoal) * 100) + '%' }"></div>
+					</div>
+				</div>
 			</div>
+			<div class="clear">&nbsp;</div>
 			<div class="row">
 				<div class="col">
 					<table class="table">
@@ -27,7 +32,7 @@
 						</thead>
 						<tbody>
 							<tr v-for="donation in donations" v-bind:key="donation.donationID" v-bind:class="{ 'table-primary': donation.amount >= highlightThreshold }">
-								<td class="text-nowrap">{{ donation.createdDateUTC | formatDate }}</td>
+								<td class="text-nowrap">{{ donation.createdDateUTC | formatDate }}<span v-if="new Date().getTime() - new Date(donation.createdDateUTC).getTime() < highlightDuration">&nbsp;<span class="badge badge-primary"> New </span></span></td>
 								<td class="text-nowrap"><span v-if="donation.amount">{{ donation.amount | formatMoney }}</span><span v-else><i>Amount hidden</i></span></td>
 								<td class="text-nowrap"><span v-if="donation.displayName">{{ donation.displayName }}</span><span v-else>Anonymous</span></td>
 								<td>{{ donation.message }}</td>
@@ -36,20 +41,14 @@
 					</table>
 				</div>
 			</div>
-			<div class="row">
-				<div class="col">
-					<div class="float-right">
-						<button type="button" class="btn btn-link" v-on:click="resetShift">Reset Shift</button>
-					</div>
-				</div>
-			</div>
 		</div>
 	</body>
 	<script>
-		var api = 'https://extra-life.org/api/', // the url of the DonorDrive API you wish to poll
+		var api = 'https://try.donordrive.com/api/', // the url of the DonorDrive API you wish to poll
 			resource = 'participants', // the resource (events, participants, teams)
-			resourceID = 348319, // the ID of the specific resource to poll
-			donationLimit = 50, // the number of donations to return (1-100)
+			resourceID = 3522, // the ID of the specific resource to poll
+			listLimit = 25, // the number of donations to return (1-100)
+			highlightDuration = 60, // the duration (in seconds) the "new" badge will display next to a donation
 			highlightThreshold = 100; // donations over this amount will be highlighted in the list (null to ignore highlighting)
 
 		Vue.filter(
@@ -72,41 +71,55 @@
 				entity: {
 					etag: ''
 				},
+				highlightDuration: ( highlightDuration * 1000 ),
 				highlightThreshold: highlightThreshold
 			},
 			el: '#app',
 			methods: {
 				refreshDonations() {
-					axios.get(api + resource + '/' + resourceID + '/donations' + ( api.indexOf('?') >= 0 ? '&' : '?' ) + 'limit=' + donationLimit)
+					// on initial load, grab the newest records
+					var criteria = 'orderBy=' + encodeURIComponent('createdDateUTC DESC') + '&limit=' + listLimit.toString(),
+						lastDonation;
+
+					// on subsequent intervals, only pull new records
+					if(this.entity.lastDonation) {
+						lastDonation = new Date(this.entity.lastDonation);
+						criteria = 'where=' + encodeURIComponent('createdDateUTC >= ' + lastDonation.toISOString()) + '&orderBy=' + encodeURIComponent('createdDateUTC ASC');
+					}
+
+					axios.get(api + resource + '/' + resourceID + '/donations' + ( api.indexOf('?') >= 0 ? '&' : '?' ) + criteria)
 						.then((response) => {
-							this.donations = response.data;
+							response.data.forEach((dx) => {
+								var createdDate = new Date(dx.createdDateUTC);
+
+								if(lastDonation) {
+									if(createdDate > lastDonation) {
+										this.donations.unshift(dx);
+									}
+								} else {
+									this.donations.push(dx);
+								}
+
+								if(this.donations.length > listLimit) {
+									this.donations.length = listLimit;
+								}
+
+								this.entity.lastDonation = createdDate;
+							});
 						});
 				},
 				refreshEntity() {
 					axios.get(api + resource + '/' + resourceID, { headers: { 'if-none-match': this.entity.etag } })
 						.then((response) => {
 							// success
-							var e = response.data;
+							var e = Object.assign({}, this.entity, response.data);
 							e.etag = response.headers.etag;
-
-							if(!window.localStorage.getItem('startingSumDonations')) {
-								window.localStorage.setItem('startingSumDonations', e.sumDonations);
-							}
-
-							e.sumShiftDonations = ( e.sumDonations - numeral(window.localStorage.getItem('startingSumDonations')).value() );
 
 							this.entity = e;
 
 							v.refreshDonations();
 						})
 						.catch((error) => {});
-				},
-				resetShift() {
-					window.localStorage.removeItem('startingSumDonations');
-
-					this.entity.etag = '';
-
-					v.refreshEntity();
 				}
 			}
 		});
