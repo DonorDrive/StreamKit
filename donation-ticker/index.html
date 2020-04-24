@@ -28,6 +28,7 @@
 								<th scope="col">$</th>
 								<th scope="col">Name</th>
 								<th scope="col">Message</th>
+								<th scope="col">Incentive</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -36,6 +37,7 @@
 								<td class="text-nowrap"><span v-if="donation.amount">{{ donation.amount | formatMoney }}</span><span v-else><i>Amount hidden</i></span></td>
 								<td class="text-nowrap"><span v-if="donation.displayName">{{ donation.displayName }}</span><span v-else>Anonymous</span></td>
 								<td>{{ donation.message }}</td>
+								<td>{{ matchIncentive(donation.incentiveID) }}</td>
 							</tr>
 						</tbody>
 					</table>
@@ -120,6 +122,16 @@
 							v.refreshDonations();
 						})
 						.catch((error) => {});
+				},
+				matchIncentive(incentiveId) {
+					let incentive = this.incentives.find(i => i.incentiveID == incentiveId);
+					return incentive != null ? incentive.description : ""
+				},
+				cacheIncentives() {
+					axios.get(api + resource + '/' + resourceID + '/incentives')
+						.then((response) => {
+							this.incentives = response.data;
+						})
 				}
 			}
 		});
@@ -130,7 +142,8 @@
 			},
 			15000
 		);
-
+		
+		v.cacheIncentives();
 		v.refreshEntity();
 	</script>
 </html>
