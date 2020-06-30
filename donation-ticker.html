@@ -2,11 +2,10 @@
 	<head>
 		<script src="https://cdn.jsdelivr.net/npm/moment@2.20.1/moment.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/numeral@2.0.6/numeral.min.js"></script>
-		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-		<!--<script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>-->
+		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
 		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+		<script src="config.js"></script>
 	</head>
 	<body>
 		<div id="app" class="container-fluid">
@@ -44,13 +43,6 @@
 		</div>
 	</body>
 	<script>
-		var api = 'https://try.donordrive.com/api/', // the url of the DonorDrive API you wish to poll
-			resource = 'participants', // the resource (events, participants, teams)
-			resourceID = 19151, // the ID of the specific resource to poll
-			listLimit = 25, // the number of donations to return (1-100)
-			highlightDuration = 60, // the duration (in seconds) the "new" badge will display next to a donation
-			highlightThreshold = 100; // donations over this amount will be highlighted in the list (null to ignore highlighting)
-
 		Vue.filter(
 			'formatDate',
 			(value) => {
@@ -71,14 +63,14 @@
 				entity: {
 					etag: ''
 				},
-				highlightDuration: ( highlightDuration * 1000 ),
-				highlightThreshold: highlightThreshold
+				highlightDuration: ( window.config.donationTicker.highlightDuration * 1000 ),
+				highlightThreshold: window.config.donationTicker.highlightThreshold
 			},
 			el: '#app',
 			methods: {
 				refreshDonations() {
 					// on initial load, grab the newest records
-					var criteria = 'orderBy=' + encodeURIComponent('createdDateUTC DESC') + '&limit=' + listLimit.toString(),
+					var criteria = 'orderBy=' + encodeURIComponent('createdDateUTC DESC') + '&limit=' + window.config.donationTicker.listLimit.toString(),
 						lastDonation;
 
 					// on subsequent intervals, only pull new records
@@ -87,7 +79,7 @@
 						criteria = 'where=' + encodeURIComponent('createdDateUTC > ' + lastDonation.toISOString()) + '&orderBy=' + encodeURIComponent('createdDateUTC ASC');
 					}
 
-					axios.get(api + resource + '/' + resourceID + '/donations' + ( api.indexOf('?') >= 0 ? '&' : '?' ) + criteria)
+					axios.get(window.config.api + window.config.resource + '/' + window.config.resourceID + '/donations' + ( window.config.api.indexOf('?') >= 0 ? '&' : '?' ) + criteria)
 						.then((response) => {
 							response.data.forEach((dx) => {
 								var createdDate = new Date(dx.createdDateUTC);
@@ -100,8 +92,8 @@
 									this.donations.push(dx);
 								}
 
-								if(this.donations.length > listLimit) {
-									this.donations.length = listLimit;
+								if(this.donations.length > window.config.donationTicker.listLimit) {
+									this.donations.length = window.config.donationTicker.listLimit;
 								}
 
 								this.entity.lastDonation = createdDate;
@@ -109,7 +101,7 @@
 						});
 				},
 				refreshEntity() {
-					axios.get(api + resource + '/' + resourceID, { headers: { 'if-none-match': this.entity.etag } })
+					axios.get(window.config.api + window.config.resource + '/' + window.config.resourceID, { headers: { 'if-none-match': this.entity.etag } })
 						.then((response) => {
 							// success
 							var e = Object.assign({}, this.entity, response.data);
