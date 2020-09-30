@@ -123,8 +123,8 @@
 						})
 						.catch((error) => {});
 				},
-				matchIncentive(incentiveId) {
-					let incentive = this.incentives.find(i => i.incentiveID == incentiveId);
+				matchIncentive(incentiveID) {
+					let incentive = this.incentives.find(i => i.incentiveID == incentiveID);
 					return incentive != null ? incentive.description : ""
 				},
 				cacheIncentives() {
