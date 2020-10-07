@@ -1,0 +1,99 @@
+<html>
+	<head>
+		<script src="https://cdn.jsdelivr.net/npm/numeral@2.0.6/numeral.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
+		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+		<link rel="stylesheet" href="resources/css/streaming-overlay.css"/>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.0.0/animate.min.css" />
+		<script src="config.js"></script>
+	</head>
+	<body>
+		<div id="app" style="width: 100%;">
+			<transition name="fade" enter-active-class="animate__fadeIn" leave-active-class="animate__fadeOut">
+				<section v-if="donation" class="animate__animated" style="width: 100%">
+					<h1>
+						<span v-if="donation.amount">{{ donation.amount | formatMoney }}</span><span v-else>Donation</span>
+						from
+						<span v-if="donation.displayName">{{ donation.displayName }}</span><span v-else>Anonymous</span>
+					</h1>
+					<audio autoplay="true" src="resources/sounds/soft-success.mp3"></audio>
+				</section>
+			</transition>
+		</div>
+	</body>
+	<script>
+		Vue.filter(
+			'formatMoney',
+			(value) => {
+				return numeral(value).format('$0,0.00');
+			}
+		);
+
+		var v = new Vue({
+			data: {
+				count: 0,
+				donation: null,
+				donations: [],
+				entity: {
+					etag: '',
+					lastDonation: new Date().toISOString()
+				}
+			},
+			el: '#app',
+			methods: {
+				refreshDonations() {
+					var ld = new Date(this.entity.lastDonation);
+
+					axios.get(window.config.api + window.config.resource + '/' + window.config.resourceID + '/donations' + ( window.config.api.indexOf('?') >= 0 ? '&' : '?' ) + 'where=' + encodeURIComponent('createdDateUTC > ' + ld.toISOString()) + '&orderBy=' + encodeURIComponent('createdDateUTC ASC'))
+						.then((response) => {
+							response.data.forEach((dx) => {
+								var createdDate = new Date(dx.createdDateUTC);
+
+								if(createdDate > ld) {
+									this.donations.push(dx);
+									this.entity.lastDonation = dx.createdDateUTC;
+								}
+							});
+						});
+				},
+				refreshEntity() {
+					axios.get(window.config.api + window.config.resource + '/' + window.config.resourceID, { headers: { 'if-none-match': this.entity.etag } })
+						.then((response) => {
+							// success
+							var e = Object.assign({}, this.entity, response.data);
+							e.etag = response.headers.etag;
+
+							this.entity = e;
+
+							this.refreshDonations();
+						})
+						.catch((error) => {});
+				}
+			}
+		});
+
+		setInterval(
+			() => {
+				v.refreshEntity();
+			},
+			15000
+		);
+
+		setInterval(
+			() => {
+				if(v.donations.length) {
+					v.donation = v.donations.shift();
+					setTimeout(
+						() => {
+							v.donation = null;
+						},
+						5000
+					);
+				}
+			},
+			7000
+		);
+
+		v.refreshEntity();
+	</script>
+</html>

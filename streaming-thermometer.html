@@ -1,11 +1,11 @@
 <html>
 	<head>
 		<script src="https://cdn.jsdelivr.net/npm/numeral@2.0.6/numeral.min.js"></script>
-		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-<!-- 		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script> -->
+		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
 		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 		<link rel="stylesheet" href="resources/css/streaming-overlay.css"/>
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+		<script src="config.js"></script>
 	</head>
 	<body>
 		<div id="app" class="py-3 bg-grad-grey shadow text-light position-relative overflow-hidden rounded" style="width: 600px;">
@@ -30,16 +30,11 @@
 						<h1 class="h2 d-block w-100"><span v-if="donation.amount">{{ donation.amount | formatMoney }}</span></h1>
 						<h2 class="h6 d-block w-100"><span v-if="donation.displayName">{{ donation.displayName }}</span><span v-else>Anonymous</span></h2>
 					</div>
-					<audio autoplay="true" src="resources/sounds/soft-success.mp3"></audio>
 				</section>
 			</transition>
 		</div>
 	</body>
 	<script>
-		var api = 'https://try.donordrive.com/api/', // the url of the DonorDrive API you wish to poll
-			resource = 'participants', // the resource (events, participants, teams)
-			resourceID = 19151; // the ID of the specific resource to poll
-
 		Vue.filter(
 			'formatMoney',
 			(value) => {
@@ -62,7 +57,7 @@
 				refreshDonations() {
 					var ld = new Date(this.entity.lastDonation);
 
-					axios.get(api + resource + '/' + resourceID + '/donations' + ( api.indexOf('?') >= 0 ? '&' : '?' ) + 'where=' + encodeURIComponent('createdDateUTC > ' + ld.toISOString()) + '&orderBy=' + encodeURIComponent('createdDateUTC ASC'))
+					axios.get(window.config.api + window.config.resource + '/' + window.config.resourceID + '/donations' + ( window.config.api.indexOf('?') >= 0 ? '&' : '?' ) + 'where=' + encodeURIComponent('createdDateUTC > ' + ld.toISOString()) + '&orderBy=' + encodeURIComponent('createdDateUTC ASC'))
 						.then((response) => {
 							response.data.forEach((dx) => {
 								var createdDate = new Date(dx.createdDateUTC);
@@ -75,7 +70,7 @@
 						});
 				},
 				refreshEntity() {
-					axios.get(api + resource + '/' + resourceID, { headers: { 'if-none-match': this.entity.etag } })
+					axios.get(window.config.api + window.config.resource + '/' + window.config.resourceID, { headers: { 'if-none-match': this.entity.etag } })
 						.then((response) => {
 							// success
 							var e = Object.assign({}, this.entity, response.data);
@@ -83,7 +78,9 @@
 
 							this.entity = e;
 
-							this.refreshDonations();
+							if(window.config.streamingThermometer.showDonations) {
+								this.refreshDonations();
+							}
 						})
 						.catch((error) => {});
 				}
@@ -97,18 +94,20 @@
 			15000
 		);
 
-		setInterval(
-			() => {
-				if(v.donations.length) {
-					v.donation = v.donations.shift();
-					setTimeout(
-						() => { v.donation = null; },
-						5000
-					);
-				}
-			},
-			7000
-		);
+		if(window.config.streamingThermometer.showDonations) {
+			setInterval(
+				() => {
+					if(v.donations.length) {
+						v.donation = v.donations.shift();
+						setTimeout(
+							() => { v.donation = null; },
+							5000
+						);
+					}
+				},
+				7000
+			);
+		}
 
 		v.refreshEntity();
 	</script>
