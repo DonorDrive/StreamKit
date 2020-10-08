@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<script src="https://cdn.jsdelivr.net/npm/moment@2.20.1/moment.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/dayjs@1.9.1/dayjs.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/numeral@2.0.6/numeral.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
 		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
@@ -46,7 +46,7 @@
 		Vue.filter(
 			'formatDate',
 			(value) => {
-				return moment(value).format('MM/DD/YYYY hh:mm');
+				return dayjs(value).format('MM/DD/YYYY hh:mm a');
 			}
 		);
 
