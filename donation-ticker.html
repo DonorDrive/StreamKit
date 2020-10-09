@@ -46,7 +46,7 @@
 		Vue.filter(
 			'formatDate',
 			(value) => {
-				return dayjs(value).format('MM/DD/YYYY hh:mm a');
+				return dayjs(value).format(window.config.donationTicker.dateMask);
 			}
 		);
 

@@ -14,7 +14,9 @@ window.config = {
 		// donations over this amount will be highlighted in the list (null to ignore highlighting)
 		highlightThreshold: 100,
 		// the number of donations to return (1-100)
-		listLimit: 25
+		listLimit: 25,
+		// Donation date mask/format
+		dateMask: 'MM/DD/YYYY hh:mm a'
 	},
 
 	// properties specific to streaming-thermometer
