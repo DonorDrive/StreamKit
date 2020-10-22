@@ -26,7 +26,9 @@ window.config = {
 		// scrolls most recent donations on screen
 		scrollDonations: true,
 		// compact view or full width of the screen
-		compactView: false
+		compactView: true,
+		// number of donations to return (1-100)
+		donationLimit: 25
 	}
 
 };

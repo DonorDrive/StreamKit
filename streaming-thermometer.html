@@ -8,7 +8,7 @@
 		<script src="config.js"></script>
 	</head>
 	<body>
-		<div id="app" class="py-3 shadow text-light position-relative overflow-hidden rounded" style="width: 600px;" v-bind:class="backgroundColor">
+		<div id="app" class="py-3 shadow text-light position-relative overflow-hidden rounded" v-bind:class="backgroundColor, thermometerSize">
 			<section class="container-fluid">
 				<div class="row align-items-center">
 					<div class="col-3">
@@ -18,8 +18,9 @@
 						<div class="marquee">
 							<ul>
 								<li v-for="donation in marqueeDonations" v-bind:key="donation.donationID">
-										{{donation.amount}} <span v-if="donation.displayName">{{ donation.displayName }}</span><span v-else>Anonymous</span></h2>
-									</li>
+										{{donation.amount | formatMoney}} 
+										<span v-if="donation.displayName">{{ donation.displayName }}</span><span v-else>Anonymous</span></h2>
+								</li>
 							</ul>
 						</div>
 						<div class="progress">
@@ -53,12 +54,14 @@
 				count: 0,
 				donation: null,
 				donations: [],
-				marqueeDonations: '',
+				marqueeDonations: [],
 				entity: {
 					etag: '',
-					lastDonation: new Date().toISOString()
+					lastDonation: new Date().toISOString(),
+					initialize: true
 				},
-				backgroundColor: window.config.streamingThermometer.transparentBackground ? "transparent" : "bg-grad-grey"
+				backgroundColor: window.config.streamingThermometer.transparentBackground ? "transparent" : "bg-grad-grey",
+				thermometerSize: window.config.streamingThermometer.compactView ? "compact" : "full-size"
 			},
 			el: '#app',
 			methods: {
@@ -80,7 +83,6 @@
 					axios.get(window.config.api + window.config.resource + '/' + window.config.resourceID, { headers: { 'if-none-match': this.entity.etag } })
 						.then((response) => {
 							// success
-							console.log(response);
 							var e = Object.assign({}, this.entity, response.data);
 							e.etag = response.headers.etag;
 
@@ -93,12 +95,39 @@
 						.catch((error) => {});
 				},
 				refreshDonations() {
-					axios(window.config.api + window.config.resource + '/' + window.config.resourceID + '/donations?limit=25&orderBy=' + encodeURIComponent('createdDateUTC DESC'))
-						.then((response) => {
-							this.marqueeDonations = response.data;
-						});
-				}
+					// on initial load, grab the newest records
+					if(this.entity.initialize)
+					{
+						var criteria = 'orderBy=' + encodeURIComponent('createdDateUTC DESC') + '&limit=' + window.config.streamingThermometer.donationLimit.toString(),
+						lastDonation;
+					}
+					// on subsequent intervals, only pull new records
+					else if(this.entity.lastDonation) {
+						lastDonation = new Date(this.entity.lastDonation);
+						criteria = 'where=' + encodeURIComponent('createdDateUTC > ' + lastDonation.toISOString()) + '&orderBy=' + encodeURIComponent('createdDateUTC ASC');
+					}
 
+					axios.get(window.config.api + window.config.resource + '/' + window.config.resourceID + '/donations' + ( window.config.api.indexOf('?') >= 0 ? '&' : '?' ) + criteria)
+						.then((response) => {
+							response.data.forEach((dx) => {
+								var createdDate = new Date(dx.createdDateUTC);
+
+								if(lastDonation) {
+									if(createdDate > lastDonation) this.marqueeDonations.unshift(dx);
+								} else {
+									this.marqueeDonations.push(dx);
+								}
+
+								if(this.marqueeDonations.length > window.config.streamingThermometer.donationLimit) {
+									this.marqueeDonations.length = window.config.streamingThermometer.donationLimit;
+								}
+
+								if(!this.entity.initialize) this.entity.lastDonation = createdDate;
+
+							});
+							this.entity.initialize = false;
+						});
+				},
 			}
 		});
 
