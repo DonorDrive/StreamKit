@@ -71,3 +71,56 @@ h6{
 .progress-bar.bg-blue{
 	background-color: #0096db;
 }
+
+/* use to revert back transformation of progress, might be a better way to accomplish this */
+.progress-bar {
+	-webkit-transform-origin: bottom left;
+    transform-origin: bottom left;
+    -webkit-transform: skew(15deg,0deg);
+	transform: skew(15deg,0deg);
+	font-size:1em;
+}
+
+.progress {
+	-webkit-transform-origin: bottom left;
+    transform-origin: bottom left;
+    -webkit-transform: skew(-15deg,0deg);
+	transform: skew(-15deg,0deg);
+	height: 2rem !important;
+}
+
+.transparent {
+	background-color: transparent;
+}
+
+.marquee {
+	width: 450px;
+	margin: 0 auto;
+	white-space: nowrap;
+	overflow: hidden;
+	box-sizing: border-box;
+  }
+
+  .marquee ul { 
+	display: inline-block;
+	padding-left: 100%;
+	will-change: transform;
+	animation: marquee 50s linear infinite;
+	color: black;
+	margin-bottom: 0;
+ }
+
+.marquee ul li { 
+	display: inline-block;
+	color: black;
+} 
+
+.marquee ul li:after {
+    content: "\2022";
+    padding: 0 10px;
+}
+  
+  @keyframes marquee {
+	0% { transform: translate(0, 0); }
+	100% { transform: translate(-100%, 0); }
+  }

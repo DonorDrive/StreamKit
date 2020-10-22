@@ -8,18 +8,24 @@
 		<script src="config.js"></script>
 	</head>
 	<body>
-		<div id="app" class="py-3 bg-grad-grey shadow text-light position-relative overflow-hidden rounded" style="width: 600px;">
+		<div id="app" class="py-3 shadow text-light position-relative overflow-hidden rounded" style="width: 600px;" v-bind:class="backgroundColor">
 			<section class="container-fluid">
 				<div class="row align-items-center">
 					<div class="col-3">
-						<img src="resources/images/streamingOverlayLogo.png" class="img-fluid" style="max-height: 60px;" alt="Logo" />
+						<img src="resources/images/EL-Logo.png" class="img-fluid" style="max-height: 60px;" alt="Logo" />
 					</div>
 					<div class="col-9 js-progress">
-						<div class="text-right">
-							<h1 class="h5">{{ entity.sumDonations | formatMoney }} / {{ entity.fundraisingGoal | formatMoney }}</h1>
+						<div class="marquee">
+							<ul>
+								<li v-for="donation in marqueeDonations" v-bind:key="donation.donationID">
+										{{donation.amount}} <span v-if="donation.displayName">{{ donation.displayName }}</span><span v-else>Anonymous</span></h2>
+									</li>
+							</ul>
 						</div>
 						<div class="progress">
-							<div class="progress-bar progress-bar-grow bg-blue" role="progressbar" v-bind:style="{ width: ((entity.sumDonations / entity.fundraisingGoal) * 100) + '%' }"></div>
+							<div class="progress-bar progress-bar-grow bg-blue" role="progressbar" v-bind:style="{ width: ((entity.sumDonations / entity.fundraisingGoal) * 100) + '%' }">
+								{{ entity.sumDonations | formatMoney }} / {{ entity.fundraisingGoal | formatMoney }}
+							</div>
 						</div>
 					</div>
 				</div>
@@ -47,16 +53,17 @@
 				count: 0,
 				donation: null,
 				donations: [],
+				marqueeDonations: '',
 				entity: {
 					etag: '',
 					lastDonation: new Date().toISOString()
-				}
+				},
+				backgroundColor: window.config.streamingThermometer.transparentBackground ? "transparent" : "bg-grad-grey"
 			},
 			el: '#app',
 			methods: {
-				refreshDonations() {
+				refreshRecentDonations() {
 					var ld = new Date(this.entity.lastDonation);
-
 					axios.get(window.config.api + window.config.resource + '/' + window.config.resourceID + '/donations' + ( window.config.api.indexOf('?') >= 0 ? '&' : '?' ) + 'where=' + encodeURIComponent('createdDateUTC > ' + ld.toISOString()) + '&orderBy=' + encodeURIComponent('createdDateUTC ASC'))
 						.then((response) => {
 							response.data.forEach((dx) => {
@@ -73,17 +80,25 @@
 					axios.get(window.config.api + window.config.resource + '/' + window.config.resourceID, { headers: { 'if-none-match': this.entity.etag } })
 						.then((response) => {
 							// success
+							console.log(response);
 							var e = Object.assign({}, this.entity, response.data);
 							e.etag = response.headers.etag;
 
 							this.entity = e;
 
 							if(window.config.streamingThermometer.showDonations) {
-								this.refreshDonations();
+								this.refreshRecentDonations();
 							}
 						})
 						.catch((error) => {});
+				},
+				refreshDonations() {
+					axios(window.config.api + window.config.resource + '/' + window.config.resourceID + '/donations?limit=25&orderBy=' + encodeURIComponent('createdDateUTC DESC'))
+						.then((response) => {
+							this.marqueeDonations = response.data;
+						});
 				}
+
 			}
 		});
 
@@ -109,6 +124,12 @@
 			);
 		}
 
+		if(window.config.streamingThermometer.scrollDonations) {
+			v.refreshDonations();
+			setInterval(() => {
+				v.refreshDonations();
+			}, 7000);
+		}
 		v.refreshEntity();
 	</script>
 </html>
