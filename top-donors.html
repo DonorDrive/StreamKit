@@ -1,0 +1,86 @@
+<html>
+	<head>
+		<script src="https://cdn.jsdelivr.net/npm/moment@2.20.1/moment.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/numeral@2.0.6/numeral.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
+		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+		<script src="config.js"></script>
+	</head>
+	<body>
+		<div id="app" class="container-fluid">
+			<div class="row">
+				<div class="col">
+					<table style="width:300px">
+						<tbody>
+							<tr v-for="donor in donors" v-bind:key="donor.donorID">
+								<td class="text-nowrap"><span v-if="donor.displayName"><b>{{ donor.displayName }}</b></span><span v-else>Anonymous</span></td>
+								<td class="text-nowrap"><span v-if="donor.sumDonations"><b>{{ donor.sumDonations | formatMoney }}</b></span><span v-else><i>Amount hidden</i></span></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script>
+		Vue.filter(
+			'formatDate',
+			(value) => {
+				return moment(value).format('MM/DD/YYYY hh:mm');
+			}
+		);
+
+		Vue.filter(
+			'formatMoney',
+			(value) => {
+				return numeral(value).format('$0,0.00');
+			}
+		);
+		var v = new Vue({
+			data: {
+				donors: [],
+				entity: {
+					etag: ''
+				},
+			},
+			el: '#app',
+			methods: {
+				refreshDonors() {
+					// clear out existing donations and refresh list
+					this.donors = [];
+					var criteria = 'orderBy=' + encodeURIComponent('sumDonations DESC') + '&limit=' + window.config.donationTicker.listLimit.toString();
+
+					axios.get(window.config.api + window.config.resource + '/' + window.config.resourceID + '/donors' + ( window.config.api.indexOf('?') >= 0 ? '&' : '?' ) + criteria)
+						.then((response) => {
+							response.data.forEach((dx) => {
+								this.donors.push(dx);
+							});
+						});
+				},
+				refreshEntity() {
+					axios.get(window.config.api + window.config.resource + '/' + window.config.resourceID, { headers: { 'if-none-match': this.entity.etag } })
+						.then((response) => {
+							// success
+							var e = Object.assign({}, this.entity, response.data);
+							e.etag = response.headers.etag;
+
+							this.entity = e;
+
+							v.refreshDonors();
+						})
+						.catch((error) => {});
+				}
+			}
+		});
+
+		setInterval(
+			() => {
+				v.refreshEntity();
+			},
+			15000
+		);
+
+		v.refreshEntity();
+	</script>
+</html>
