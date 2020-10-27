@@ -13,7 +13,7 @@
 				<div class="col">
 					<table style="width:300px">
 						<tbody>
-							<tr v-for="donor in donors" v-bind:key="donor.donorID">
+							<tr v-for="donor in donors" v-bind:key="donor.donorID + donor.displayName">
 								<td class="text-nowrap"><span v-if="donor.displayName"><b>{{ donor.displayName }}</b></span><span v-else>Anonymous</span></td>
 								<td class="text-nowrap"><span v-if="donor.sumDonations"><b>{{ donor.sumDonations | formatMoney }}</b></span><span v-else><i>Amount hidden</i></span></td>
 							</tr>
