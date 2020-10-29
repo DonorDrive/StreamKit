@@ -49,7 +49,7 @@
 				refreshDonors() {
 					// clear out existing donations and refresh list
 					this.donors = [];
-					var criteria = 'orderBy=' + encodeURIComponent('sumDonations DESC') + '&limit=' + window.config.donationTicker.topDonorListLimit.toString();
+					var criteria = 'orderBy=' + encodeURIComponent('sumDonations DESC') + '&limit=' + window.config.topDonors.listLimit.toString();
 
 					axios.get(window.config.api + window.config.resource + '/' + window.config.resourceID + '/donors' + ( window.config.api.indexOf('?') >= 0 ? '&' : '?' ) + criteria)
 						.then((response) => {
