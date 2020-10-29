@@ -9,14 +9,14 @@ window.config = {
 
 	// properties specific to donation-ticker
 	donationTicker: {
+		// Donation date mask/format
+		dateMask: 'MM/DD/YYYY hh:mm a',
 		// the duration (in seconds) the "new" badge will display next to a donation
 		highlightDuration: 60,
 		// donations over this amount will be highlighted in the list (null to ignore highlighting)
 		highlightThreshold: 100,
 		// the number of donations to return (1-100)
-		listLimit: 25,
-		// Donation date mask/format
-		dateMask: 'MM/DD/YYYY hh:mm a'
+		listLimit: 25
 	},
 
 	// properties specific to streaming-thermometer
