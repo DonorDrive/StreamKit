@@ -1,11 +1,11 @@
 window.config = {
 
 	// the url of the DonorDrive API you wish to poll
-	api: 'https://www.extra-life.org/api/',
+	api: 'https://docs.donordrive.com/api/',
 	// the resource (events, participants, teams)
 	resource: 'participants',
 	// the ID of the specific resource to poll
-	resourceID: 400560,
+	resourceID: 2065,
 
 	// properties specific to donation-ticker
 	donationTicker: {
@@ -19,16 +19,7 @@ window.config = {
 
 	// properties specific to streaming-thermometer
 	streamingThermometer: {
-		// pop up to show when a donation is received
-		showDonations: false,
-		// transparent background or default to grey
-		transparentBackground: true,
-		// scrolls most recent donations on screen
-		scrollDonations: true,
-		// compact view or full width of the screen
-		compactView: true,
-		// number of donations to return (1-100)
-		donationLimit: 25
+		showDonations: true
 	}
 
 };

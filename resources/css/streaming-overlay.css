@@ -1,10 +1,3 @@
-:root {
-	--blue:  #4074c2;
-	--dark-blue:  #1a4c6d;
-	--green: #7fd836;
-	--light-blue:  #26c2eb;
-}
-
 @font-face{
   font-family: 'Furore-webfont';
   src: url('../fonts/Furore-webfont.eot');
@@ -37,14 +30,6 @@ h6{
 	100% {
 		transform: translateX(100%);
 	}
-}
-
-.compact {
-	width:600px;
-}
-
-.full-size {
-	width: 100%;
 }
 
 .no-animation{
@@ -84,65 +69,5 @@ h6{
 }
 
 .progress-bar.bg-blue{
-	background-color: var(--blue);
-}
-
-/* use to revert back transformation of progress, might be a better way to accomplish this */
-.progress-bar {
-	-webkit-transform-origin: bottom left;
-    transform-origin: bottom left;
-    -webkit-transform: skew(15deg,0deg);
-	transform: skew(15deg,0deg);
-	font-size:1.2em;
-}
-
-.progress {
-	-webkit-transform-origin: bottom left;
-    transform-origin: bottom left;
-    -webkit-transform: skew(-15deg,0deg);
-	transform: skew(-15deg,0deg);
-	height: 2rem !important;
-}
-
-.transparent {
-	background-color: transparent;
-}
-
-.marquee {
-	margin: 0 auto;
-	white-space: nowrap;
-	overflow: hidden;
-	box-sizing: border-box;
-}
-
-.marquee ul { 
-	display: inline-block;
-	padding-left: 100%;
-	will-change: transform;
-	animation: marquee 60s linear infinite;
-	color: black;
-	margin-bottom: 0;
- }
-
-.marquee ul li { 
-	display: inline-block;
-} 
-
-.marquee ul li:after {
-    content: "\2022";
-    padding: 0 10px;
-}
-
-.marquee li {
-	font-weight: 600;
-	color: var(--green);
-}
-
-.marquee span {
-	color: var(--light-blue);
-}
-  
-@keyframes marquee {
-	0% { transform: translate(0, 0); }
-	100% { transform: translate(-100%, 0); }
+	background-color: #0096db;
 }
