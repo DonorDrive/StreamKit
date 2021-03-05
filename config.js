@@ -19,6 +19,14 @@ window.config = {
 		listLimit: 25
 	},
 
+	// properties specific to top-donors
+	topDonors: {
+		// date mask/format
+		dateMask: 'MM/DD/YYYY hh:mm a',
+		// the number of donors to return (1-100)
+		listLimit: 25
+	},
+
 	// properties specific to streaming-thermometer
 	streamingThermometer: {
 		showDonations: true
