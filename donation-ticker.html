@@ -36,7 +36,7 @@
 								<td class="text-nowrap"><span v-if="donation.amount">{{ donation.amount | formatMoney }}</span><span v-else><i>Amount hidden</i></span></td>
 								<td class="text-nowrap"><span v-if="donation.displayName">{{ donation.displayName }}</span><span v-else>Anonymous</span></td>
 								<td>{{ donation.message }}</td>
-								<td>{{ matchIncentive(donation.incentiveID) }}</td>
+								<td v-if="showIncentives">{{ matchIncentive(donation.incentiveID) }}</td>
 							</tr>
 						</tbody>
 					</table>
@@ -66,7 +66,8 @@
 					etag: ''
 				},
 				highlightDuration: ( window.config.donationTicker.highlightDuration * 1000 ),
-				highlightThreshold: window.config.donationTicker.highlightThreshold
+				highlightThreshold: window.config.donationTicker.highlightThreshold,
+				showIncentives: window.config.donationTicker.showIncentives,
 			},
 			el: '#app',
 			methods: {
@@ -135,7 +136,9 @@
 			15000
 		);
 		
-		v.cacheIncentives();
+		if (this.showIncentives) {
+			v.cacheIncentives();
+		}
 		v.refreshEntity();
 	</script>
 </html>
