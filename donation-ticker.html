@@ -27,7 +27,7 @@
 								<th scope="col">$</th>
 								<th scope="col">Name</th>
 								<th scope="col">Message</th>
-								<th scope="col">Incentive</th>
+								<th scope="col" v-if="showIncentives">Incentive</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -121,7 +121,7 @@
 					return incentive != null ? incentive.description : ""
 				},
 				cacheIncentives() {
-					axios.get(api + resource + '/' + resourceID + '/incentives')
+					axios.get(window.config.api + window.config.resource + '/' + window.config.resourceID + '/incentives')
 						.then((response) => {
 							this.incentives = response.data;
 						})
@@ -136,9 +136,10 @@
 			15000
 		);
 		
-		if (this.showIncentives) {
+		if (window.config.donationTicker.showIncentives) {
 			v.cacheIncentives();
 		}
+
 		v.refreshEntity();
 	</script>
 </html>
